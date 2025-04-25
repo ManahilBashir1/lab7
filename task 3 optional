@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+void main() {
+  runApp(const DatabaseQueryApp());
+}
+
+class DatabaseQueryApp extends StatelessWidget {
+  const DatabaseQueryApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Database Query Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        scaffoldBackgroundColor: Colors.grey[100],
+        cardTheme: CardTheme(
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      home: const DatabaseQueryScreen(),
+    );
+  }
+}
+
+class DatabaseQueryScreen extends StatefulWidget {
+  const DatabaseQueryScreen({super.key});
+
+  @override
+  State<DatabaseQueryScreen> createState() => _DatabaseQueryScreenState();
+}
+
+class _DatabaseQueryScreenState extends State<DatabaseQueryScreen> {
+  List<String> _items = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  // Simulate database query with delay
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Simulate network/database delay
+      final data = await Future.delayed(
+        const Duration(seconds: 2),
+            () => _simulateDatabaseResponse(),
+      );
+
+      setState(() {
+        _items = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load data: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Simulated database response
+  List<String> _simulateDatabaseResponse() {
+    // In a real app, this would come from a database
+    return [
+      'Database Record #1',
+      'Database Record #2',
+      'Database Record #3',
+      'Database Record #4',
+      'Database Record #5',
+      'Database Record #6',
+      'Database Record #7',
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Database Query Demo'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchData,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _fetchData,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+                  : const Text(
+                'Fetch Data from Database',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(
+              color: Colors.teal,
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Querying database...',
+              style: TextStyle(color: Colors.teal),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return const Center(
+        child: Text(
+          'No data available\nPress the button to fetch',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey, fontSize: 16),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: _items.length,
+      itemBuilder: (context, index) {
+        return Card(
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.teal[100],
+              child: Text((index + 1).toString()),
+            ),
+            title: Text(
+              _items[index],
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text('Loaded at ${DateTime.now().toString().substring(11, 19)}'),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+        );
+      },
+    );
+  }
+}
